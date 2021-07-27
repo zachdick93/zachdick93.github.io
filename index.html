@@ -1,0 +1,306 @@
+<html>
+<head>
+<meta content='text/html;charset=utf-8' http-equiv='Content-Type'>
+<meta content='utf-8' http-equiv='encoding'>
+<style type='text/css'>
+<!-- 
+
+body {
+   padding: 30px;
+}
+
+-->
+</style>
+</head>
+<script src='https://d3js.org/d3.v5.min.js'></script>
+<style> circle {fill: green; stroke: black;} </style>
+<body onload='init()' color='lightgrey'>
+<div class='chart'>
+<h2>Exploring Major Category Metrics from 2010 to 2012</h2>
+<p line-height='0px'>
+	<small><ul>
+	<li>This is a scattered plot of Major Categories from the dataset at <a href='https://raw.githubusercontent.com/fivethirtyeight/data/master/college-majors/all-ages.csv'><i>https://raw.githubusercontent.com/fivethirtyeight/data/master/college-majors/all-ages.csv</i></a> </li>
+	<li>The X-Axis shows the average unemployment rate of the Majors in each category. Notice that the unemployment rate goes from high (10%) to low (0%) </li>
+	<li>The Y-Axis shows the average median salary of the Majors in each category</li>
+	<li>The size of the data point indicates the level of popularity of the major category determined by total number of students with majoring within the category</li>
+	</small></ul>
+	<button onclick='startNarrative()'>Start Narrative</button>
+</p>
+<svg width=550 height=550 line-height='0px'>
+</svg>
+</div>
+<script>
+const storyNotes = {maxTotal: -1, minTotal: 10000000000, maxMedian: -1, minMedian: 1000000, maxUnemployed: -1, minUnemployed: 2}
+async function init () {
+	const margin = 75
+	const width = 400
+	const height = 400
+	const data = await d3.csv('https://raw.githubusercontent.com/fivethirtyeight/data/master/college-majors/all-ages.csv')
+	const majorCatObj = data.map(item => {
+			const { Major_category, Total, Unemployment_rate, Median } = item
+			
+			return { Major_category, Total: Number(Total), Unemployment_rate: Number(Unemployment_rate), Median: Number(Median) }
+		}).reduce((accumulator, currentValue) => {
+			const { Major_category, Total, Unemployment_rate, Median } = currentValue
+			// accumulator is first value and is skipped as currentValue
+			if (accumulator[Major_category] === undefined) {
+				accumulator[Major_category] = {  Total, Unemployment_rate, Median, Count: 1 }
+			} else {
+				accumulator[Major_category].Total += Total
+				accumulator[Major_category].Count += 1
+				accumulator[Major_category].Unemployment_rate += Unemployment_rate
+				accumulator[Major_category].Median += Median	
+			}
+			
+			return accumulator
+		}, {})
+	const majorCatData = []
+	let minTotal = 10000000000
+	Object.entries(majorCatObj).forEach(entry => {
+			const [key, value] = entry;
+			const obj = { 
+				Major_category: key, 
+				Total: value.Total, 
+				Unemployment_rate: (value.Unemployment_rate / value.Count).toFixed(5),
+				Median: Math.round(value.Median / value.Count)
+			}
+			if (obj.Total < minTotal) {
+				minTotal = obj.Total
+				storyNotes.minTotal = obj.Total
+			}
+			if (obj.Total > storyNotes.maxTotal) {
+				storyNotes.maxTotal = obj.Total
+			}
+			if (obj.Unemployment_rate < storyNotes.minUnemployed) {
+				storyNotes.minUnemployed = obj.Unemployment_rate
+			}
+			if (obj.Unemployment_rate > storyNotes.maxUnemployed) {
+				storyNotes.maxUnemployed = obj.Unemployment_rate
+			}
+			if (obj.Median < storyNotes.minMedian) {
+				storyNotes.minMedian = obj.Median
+			}
+			if (obj.Median > storyNotes.maxMedian) {
+				storyNotes.maxMedian = obj.Median
+			}
+			
+			majorCatData.push(obj)
+		});
+	// The visualization will be a scattered plot by Major_category
+	// Popularity will be defined by the 'Total' category and will be displayed as the size of the circle in the plot
+	// The axes will be 'Unemployment_rate' and 'Median'
+	// Tooltip will include the Major_category, Total, Total 
+	const xMin = Math.min.apply(null, majorCatData.map(item => item.Unemployment_rate)) - .01
+	const xMax = Math.max.apply(null, majorCatData.map(item => item.Unemployment_rate)) + .01
+	const yMin = Math.min.apply(null, majorCatData.map(item => item.Median)) - 5000
+	const yMax = Math.max.apply(null, majorCatData.map(item => item.Median)) + 5000
+	const x = d3.scaleLinear().domain([xMax, xMin]).range([0,width])
+	const y = d3.scaleLinear().domain([yMax, yMin]).range([0,height])
+	
+	// Add the tooltips
+	const tooltip = d3.select('.chart')
+		.append('div')
+		.style('opacity', 0)
+		.attr('class', 'tooltip')
+		.style('background-color', 'white')
+		.style('border', 'solid')
+		.style('border-width', '1px')
+		.style('border-radius', '5px')
+		.style('padding', '10px')
+		
+	var mouseover = (d) => {
+		d3.selectAll('circle')
+			.style('opacity', (e) => {
+				return d.Major_category !== e.Major_category ? 0.5 : 1
+			})
+		tooltip.style('opacity', 1)
+	}
+
+	var mousemove = (d) => {
+		tooltip
+			.html(`<small><strong>Major Category: ${d.Major_category}</strong><br>
+			- Total Students (Popularity): ${d.Total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')}<br>
+				- Unemployment Rate: ${(d.Unemployment_rate * 100).toFixed(3)}%<br>
+				- Median Salary: \$${d.Median.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</small>`)
+			.style('position', 'absolute')
+			.style('left', `${event.pageX}px`)
+			.style('top', `${event.pageY}px`)
+	}
+
+	var mouseleave = (d) => {
+		d3.selectAll('circle')
+			.style('opacity', 0.5)
+		tooltip
+			.style('opacity', 0)
+			.style('left', `${width}px`) // move it out of the way to prevent this cursor defect
+			.style('top', `${height}px`)
+	}
+	
+	// populate data into scattered plot
+	d3.select('svg')
+		.append('g')
+		.attr('transform', 'translate('+margin+','+margin+')')
+		.selectAll('circle').data(majorCatData).enter().append('circle')
+		.attr('cx', (d) => x(d.Unemployment_rate))
+		.attr('cy', (d) => y(d.Median))
+		.attr('r', (d) => Math.log(4 * d.Total / minTotal) * 2)
+		.style('opacity', .5)
+		.on('mouseover', mouseover )
+		.on('mousemove', mousemove )
+		.on('mouseleave', mouseleave )
+		.on('click',(d,i) => {
+				window.location = `majorCategory.html?majorCategory=${d.Major_category.replace(/&/g, 'and')}`
+			})
+		
+	// add axes
+	d3.select('svg')
+		.append('g')
+		.attr('transform','translate('+margin+','+margin+')')
+		.call(d3.axisLeft(y).tickFormat(x => `\$${x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')}`))
+
+	d3.select('svg')
+		.append('g')
+		.attr('transform','translate('+margin+','+(height+margin)+')')
+		.call(d3.axisBottom(x).tickFormat(x => `${(x * 100).toFixed(1)}%`))
+
+	// Labeling
+	d3.select('svg').append('text')
+		.attr('class', 'x label')
+		.attr('text-anchor', 'end')
+		.attr('x', width - 50)
+		.attr('y', height + 110)
+		.text('Average Unemployment Rate')
+		
+	d3.select('svg').append('text')
+		.attr('class', 'y label')
+		.attr('text-anchor', 'end')
+		.attr('x', -250)
+		.attr('y', 0)
+		.attr('dy', '.75em')
+		.attr('transform', 'rotate(-90)')
+		.text('Median Salary')
+		
+	
+	d3.select('.chart')
+		.append('div')
+		.style('opacity', 0)
+		.attr('class', 'storytooltip')
+		.style('background-color', 'white')
+		.style('border', 'solid')
+		.style('border-width', '1px')
+		.style('border-radius', '5px')
+		.style('padding', '10px')
+		.style('position', 'absolute')
+		
+	document.querySelector('button').click()
+}
+
+async function startNarrative() {
+	const button = document.querySelector('button')
+	const left = `${button.offsetLeft}px`
+	const top = `${button.offsetTop + 30}px`
+	button.disabled = true
+	const tooltip = d3.select('.storytooltip')
+		.style('position', 'absolute')
+		.style('left', left)
+		.style('top', top)
+	
+	d3.selectAll('circle').each((d, i) => {
+		if (d.Unemployment_rate === storyNotes.minUnemployed) {
+			d3.selectAll('circle')
+				.style('opacity', (e) => {
+					return d.Major_category === e.Major_category ? 1 : 0.5
+				})
+				.style('fill', (e) => {
+					return d.Major_category === e.Major_category ? 'red' : 'green'
+				})
+			tooltip.style('opacity', 1)
+			tooltip
+				.html(`The Major Category with the <strong>lowest unemployment rate</strong> is <strong>${d.Major_category}</strong> with an unemployment rate of <strong>${(d.Unemployment_rate * 100).toFixed(3)}%</strong>.`)
+		}
+		setTimeout(() => {
+		if (d.Unemployment_rate === storyNotes.maxUnemployed) {
+			d3.selectAll('circle')
+				.style('opacity', (e) => {
+					return d.Major_category === e.Major_category ? 1 : 0.5
+				})
+				.style('fill', (e) => {
+					return d.Major_category === e.Major_category ? 'red' : 'green'
+				})
+			tooltip.style('opacity', 1)
+			tooltip
+				.html(`The Major Category with the <strong>highest unemployment rate</strong> is <strong>${d.Major_category}</strong> with an unemployment rate of <strong>${(d.Unemployment_rate * 100).toFixed(3)}%</strong>.`)
+
+		}
+		}, 5000)
+		setTimeout(() => {
+		if (d.Median === storyNotes.maxMedian) {
+			d3.selectAll('circle')
+				.style('opacity', (e) => {
+					return d.Major_category === e.Major_category ? 1 : 0.5
+				})
+				.style('fill', (e) => {
+					return d.Major_category === e.Major_category ? 'red' : 'green'
+				})
+			tooltip.style('opacity', 1)
+			tooltip
+				.html(`The Major Category with the <strong>highest median salary</strong> is <strong>${d.Major_category}</strong> with an median salary of <strong>\$${d.Median.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</strong>.`)
+		}
+		}, 10000)
+		setTimeout(() => {
+		if (d.Median === storyNotes.minMedian) {
+			d3.selectAll('circle')
+				.style('opacity', (e) => {
+					return d.Major_category === e.Major_category ? 1 : 0.5
+				})
+				.style('fill', (e) => {
+					return d.Major_category === e.Major_category ? 'red' : 'green'
+				})
+			tooltip.style('opacity', 1)
+			tooltip
+				.html(`The Major Category with the <strong>lowest median salary</strong> is <strong>${d.Major_category}</strong> with an median salary of <strong>\$${d.Median.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</strong>.`)
+		}
+		}, 15000)
+		setTimeout(() => {
+		if (d.Total === storyNotes.maxTotal) {
+			d3.selectAll('circle')
+				.style('opacity', (e) => {
+					return d.Major_category === e.Major_category ? 1 : 0.5
+				})
+				.style('fill', (e) => {
+					return d.Major_category === e.Major_category ? 'red' : 'green'
+				})
+			tooltip.style('opacity', 1)
+			tooltip
+				.html(`The Major Category with the <strong>highest popularity</strong> is <strong>${d.Major_category}</strong> with <strong>${d.Total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</strong> total students.`)
+		}
+		}, 20000)
+		setTimeout(() => {
+		if (d.Total === storyNotes.minTotal) {
+			d3.selectAll('circle')
+				.style('opacity', (e) => {
+					return d.Major_category === e.Major_category ? 1 : 0.5
+				})
+				.style('fill', (e) => {
+					return d.Major_category === e.Major_category ? 'red' : 'green'
+				})
+			tooltip.style('opacity', 1)
+			tooltip
+				.html(`The Major Category with the <strong>lowest popularity</strong> is <strong>${d.Major_category}</strong> with <strong>${d.Total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</strong> total students.`)
+		}
+		}, 25000)
+	})
+	
+	setTimeout(() => {
+		d3.selectAll('circle')
+			.style('opacity', 0.5)
+			.style('fill', 'green')
+		tooltip
+			.style('opacity', 1)
+			.html(`Select <strong>Start Narrative</strong> to see that again. If you wish to explore on your own <strong>hover over</strong> each point to see details, or <strong>click on</strong> a point to see the breakdown of it's majors.`)
+		button.disabled = false
+	}, 30000)
+}
+</script>
+</body>
+</html>
