@@ -217,7 +217,7 @@ async function startNarrative() {
 				})
 			tooltip.style('opacity', 1)
 			tooltip
-				.html(`The Major Category with the <strong>lowest unemployment rate</strong> is <strong>${d.Major_category}</strong> with an unemployment rate of <strong>${(d.Unemployment_rate * 100).toFixed(3)}%</strong>.`)
+				.html(`The Major Category with the <strong>lowest unemployment rate</strong> is <strong style="color:red">${d.Major_category}</strong> with an unemployment rate of <strong>${(d.Unemployment_rate * 100).toFixed(3)}%</strong>.`)
 		}
 		setTimeout(() => {
 		if (d.Unemployment_rate === storyNotes.maxUnemployed) {
@@ -230,7 +230,7 @@ async function startNarrative() {
 				})
 			tooltip.style('opacity', 1)
 			tooltip
-				.html(`The Major Category with the <strong>highest unemployment rate</strong> is <strong>${d.Major_category}</strong> with an unemployment rate of <strong>${(d.Unemployment_rate * 100).toFixed(3)}%</strong>.`)
+				.html(`The Major Category with the <strong>highest unemployment rate</strong> is <strong style="color:red">${d.Major_category}</strong> with an unemployment rate of <strong>${(d.Unemployment_rate * 100).toFixed(3)}%</strong>.`)
 
 		}
 		}, 5000)
@@ -245,7 +245,7 @@ async function startNarrative() {
 				})
 			tooltip.style('opacity', 1)
 			tooltip
-				.html(`The Major Category with the <strong>highest median salary</strong> is <strong>${d.Major_category}</strong> with an median salary of <strong>\$${d.Median.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</strong>.`)
+				.html(`The Major Category with the <strong>highest median salary</strong> is <strong style="color:red">${d.Major_category}</strong> with an median salary of <strong>\$${d.Median.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</strong>.`)
 		}
 		}, 10000)
 		setTimeout(() => {
@@ -259,7 +259,7 @@ async function startNarrative() {
 				})
 			tooltip.style('opacity', 1)
 			tooltip
-				.html(`The Major Category with the <strong>lowest median salary</strong> is <strong>${d.Major_category}</strong> with an median salary of <strong>\$${d.Median.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</strong>.`)
+				.html(`The Major Category with the <strong>lowest median salary</strong> is <strong style="color:red">${d.Major_category}</strong> with an median salary of <strong>\$${d.Median.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</strong>.`)
 		}
 		}, 15000)
 		setTimeout(() => {
@@ -273,7 +273,7 @@ async function startNarrative() {
 				})
 			tooltip.style('opacity', 1)
 			tooltip
-				.html(`The Major Category with the <strong>highest popularity</strong> is <strong>${d.Major_category}</strong> with <strong>${d.Total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</strong> total students.`)
+				.html(`The Major Category with the <strong>highest popularity</strong> is <strong style="color:red">${d.Major_category}</strong> with <strong>${d.Total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</strong> total students.`)
 		}
 		}, 20000)
 		setTimeout(() => {
@@ -287,7 +287,7 @@ async function startNarrative() {
 				})
 			tooltip.style('opacity', 1)
 			tooltip
-				.html(`The Major Category with the <strong>lowest popularity</strong> is <strong>${d.Major_category}</strong> with <strong>${d.Total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</strong> total students.`)
+				.html(`The Major Category with the <strong>lowest popularity</strong> is <strong style="color:red">${d.Major_category}</strong> with <strong>${d.Total.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</strong> total students.`)
 		}
 		}, 25000)
 	})
