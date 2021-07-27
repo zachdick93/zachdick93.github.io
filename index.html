@@ -20,7 +20,7 @@ body {
 <p line-height='0px'>
 	<small><ul>
 	<li>This is a scattered plot of Major Categories from the dataset at <a href='https://raw.githubusercontent.com/fivethirtyeight/data/master/college-majors/all-ages.csv'><i>https://raw.githubusercontent.com/fivethirtyeight/data/master/college-majors/all-ages.csv</i></a> </li>
-	<li>The X-Axis shows the average unemployment rate of the Majors in each category. Notice that the unemployment rate goes from high (10%) to low (0%) </li>
+	<li>The X-Axis shows the average unemployment rate of the Majors in each category. Notice that the unemployment rate goes from high to low </li>
 	<li>The Y-Axis shows the average median salary of the Majors in each category</li>
 	<li>The size of the data point indicates the level of popularity of the major category determined by total number of students with majoring within the category</li>
 	</small></ul>
@@ -197,7 +197,7 @@ async function init () {
 
 async function startNarrative() {
 	const button = document.querySelector('button')
-	const left = `${button.offsetLeft}px`
+	const left = `${button.offsetLeft + 32}px`
 	const top = `${button.offsetTop + 30}px`
 	button.disabled = true
 	const tooltip = d3.select('.storytooltip')
